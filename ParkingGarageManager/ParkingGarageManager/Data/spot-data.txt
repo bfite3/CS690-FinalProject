@@ -1,0 +1,12 @@
+A01,O,null
+A02,R,1
+A03,O,null
+B01,O,null
+B02,T,ABC123
+B03,T,DEF456
+C01,O,null
+C02,R,2
+C03,O,null
+D01,R,3
+D02,R,4
+D03,T,JKL012
