@@ -38,6 +38,8 @@ namespace ParkingGarageManager
             finally
             {
                 Console.WriteLine("Saving data...");
+                this.Core.SavePayments();
+                this.Core.SaveVisits();
                 this.Core.SaveVehicles();
                 this.Core.SaveSpots();
                 this.Core.SaveSubscribers();
@@ -316,14 +318,20 @@ namespace ParkingGarageManager
                 string licensePlateNumber = this.Prompt("Enter license plate number or enter to go back:");
 
                 if (licensePlateNumber.Equals(""))
-                {
                     return;
-                }
                 
                 try
                 {
-                    this.Core.CheckOutSpot(licensePlateNumber);
-                    Console.WriteLine($"{licensePlateNumber} has been checked out.");
+                    var (pendingPayments, pendingVisits, spotID, subscriber) = this.Core.CheckOutSpot(licensePlateNumber);
+                    if (subscriber is ActiveSubscriber activeSubscriber)
+                    {
+                        this.SubscriberCheckOut(licensePlateNumber, spotID, activeSubscriber);
+                    }
+                    else
+                    {
+                        this.NonSubscriberCheckOut(pendingPayments, pendingVisits, spotID);
+                    }
+                    
                     this.Prompt("Press enter to continue.");
                     return;
                 }
@@ -332,6 +340,78 @@ namespace ParkingGarageManager
                     Console.WriteLine(ex.Message);
                 }
             } while (true);
+        }
+
+        public void SubscriberCheckOut(string licensePlateNumber, string spotID, ActiveSubscriber activeSubscriber)
+        {
+            this.Core.RestoreSpot(spotID, activeSubscriber);
+            Console.WriteLine($"{licensePlateNumber} has been checked out.");
+            Console.WriteLine($"{licensePlateNumber} is a subscriber. Monthly payment cleared.");
+            this.RaiseGate();
+        }
+
+        public void NonSubscriberCheckOut(List<PendingPayment> pendingPayments, List<Visit> pendingVisits, string spotID)
+        {
+            bool paymentSuccessful = this.ProcessPayment(pendingPayments, pendingVisits);
+
+            if (paymentSuccessful)
+            {
+                this.Core.RestoreSpot(spotID);
+                this.RaiseGate();
+            }
+            else
+            {
+                this.Core.RefundPayments(pendingPayments);
+                Console.WriteLine("Payment cancelled. All amounts have been refunded.");
+                Console.WriteLine("The vehicle remains checked in.");
+            }  
+        }
+
+        public bool ProcessPayment(List<PendingPayment> pendingPayments, List<Visit> pendingVisits)
+        {   
+            for(int i = 0; i < pendingPayments.Count; i++)
+            {
+                do
+                {
+                    decimal amountOwed = pendingPayments[i].AmountOwed;
+                    decimal amountPaid = pendingPayments[i].AmountPaid;
+                    decimal remainingBalance = amountOwed - amountPaid;
+
+                    Console.WriteLine($"Pending payment {i + 1}/{pendingPayments.Count}");
+                    Console.WriteLine($"Entry time: {pendingVisits[i].EntryTime}");
+                    Console.WriteLine($"Leave time: {pendingVisits[i].LeaveTime}");
+                    Console.WriteLine($"Total hours: {pendingVisits[i].TotalHours}");
+                    Console.WriteLine($"Amount owed: {amountOwed:C}");
+                    Console.WriteLine($"Amount paid: {amountPaid:C}");
+                    Console.WriteLine($"Remaning total: {remainingBalance:C}");
+                    string amountPaidPrompt = this.Prompt("Enter amount received from customer (0.00) or enter to go back:");
+
+                    if (amountPaidPrompt.Equals(""))
+                        return false;
+
+                    if (!decimal.TryParse(amountPaidPrompt, out decimal vAmountPaid))
+                    {
+                        Console.WriteLine("Please enter a valid USD currency amount. (0.00)");
+                        continue;
+                    }
+
+                    PaymentResult paymentResult = this.Core.ProcessPayment(pendingPayments[i], vAmountPaid);
+                    if (paymentResult.IsSuccess)
+                    {
+                        Console.WriteLine(paymentResult.Message);
+                        if (paymentResult.ChangeDue > 0)
+                            Console.WriteLine($"Change is due. Dispense {paymentResult.ChangeDue}");
+
+                        break;
+                    }
+                    else
+                    {
+                        Console.WriteLine(paymentResult.Message);
+                    }
+                } while (true);
+            }
+
+            return true;
         }
 
         public string ManageSubscribersInput()
@@ -823,6 +903,12 @@ namespace ParkingGarageManager
                     Console.WriteLine("Invalid selection. Try again.");
                 } while(true);
             } while (true);
+        }
+
+        public void RaiseGate()
+        {
+            Console.WriteLine("The gate is raised.");
+            Console.WriteLine("Have a wonderful day!");
         }
     }
 }
