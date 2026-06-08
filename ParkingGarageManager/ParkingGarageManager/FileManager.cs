@@ -14,8 +14,8 @@ namespace ParkingGarageManager
          public FileManager(string fileName)
         {
             this.FileName = fileName;
-            this.FileReader = new FileReader(fileName);
             this.FileSaver = new FileSaver(fileName);
+            this.FileReader = new FileReader(fileName);
             this.FileContents = [];
         }
 
