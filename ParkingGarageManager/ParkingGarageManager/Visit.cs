@@ -8,15 +8,17 @@ namespace ParkingGarageManager
     public class Visit
     {
         public string ID { get; private set; }
+        public string SpotID { get; private set; }
         public DateTime EntryTime { get; private set; }
         public DateTime? LeaveTime { get; private set; }
         public string? TotalHours { get; private set; }
         public decimal Rate { get; private set; }
         public Payment? Payment { get; private set; }
 
-        public Visit(string id, DateTime entryTime, decimal rate, Payment? payment = null, DateTime? leaveTime = null, string? totalHours = null)
+        public Visit(string id, string spotID, DateTime entryTime, decimal rate, Payment? payment = null, DateTime? leaveTime = null, string? totalHours = null)
         {
             this.ID = id;
+            this.SpotID = spotID;
             this.EntryTime = entryTime;
             this.LeaveTime = leaveTime;
             this.Rate = rate;
@@ -52,6 +54,11 @@ namespace ParkingGarageManager
             }
         }
 
+        public void ResetLeaveTime()
+        {
+            this.LeaveTime = null;
+        }
+
         public void UpdatePayment(Payment payment)
         {
             this.Payment = payment;
@@ -59,7 +66,7 @@ namespace ParkingGarageManager
 
         public string ToFileString()
         {
-           return $"{ID},{EntryTime:yyyy-MM-dd HH:mm:ss},{LeaveTime?.ToString("yyyy-MM-dd HH:mm:ss") ?? "null"},{this.TotalHours ?? "null"},{this.Rate},{this.Payment?.ID ?? "null"}"; 
+           return $"{ID},{SpotID},{EntryTime:yyyy-MM-dd HH:mm:ss},{LeaveTime?.ToString("yyyy-MM-dd HH:mm:ss") ?? "null"},{this.TotalHours ?? "null"},{this.Rate},{this.Payment?.ID ?? "null"}"; 
         }
     }
 }

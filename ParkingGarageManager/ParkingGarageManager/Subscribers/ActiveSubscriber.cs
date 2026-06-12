@@ -23,10 +23,10 @@ namespace ParkingGarageManager
             }
         }
 
-        public void UpdateDetails(string? name = null, string? email = null, string? driversLicenseNumber = null, List<string>? licensePlateNumbers = null, List<string>? spotIDs = null)
+        public void UpdateDetails(string name, string email, string driversLicenseNumber, List<string> licensePlateNumbers, List<string> spotIDs)
         {
             base.UpdateDetails(name, email, driversLicenseNumber, licensePlateNumbers);
-            spotIDs?.ForEach(this.AddSpotID);
+            this.SpotIDs = spotIDs;
         }
 
         public override string FileToString()

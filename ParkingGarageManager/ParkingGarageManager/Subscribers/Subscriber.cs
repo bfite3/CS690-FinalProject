@@ -34,13 +34,12 @@ namespace ParkingGarageManager
             }
         }
 
-        public void UpdateDetails(string? name = null, string? email = null, string? driversLicenseNumber = null, List<string>? licensePlateNumbers = null)
+        public void UpdateDetails(string name, string email, string driversLicenseNumber, List<string> licensePlateNumbers)
         {
-            if (name != null) this.Name = name;
-            if (email != null) this.Email = email;
-            if (driversLicenseNumber != null) this.DriversLicenseNumber = driversLicenseNumber;
-
-            licensePlateNumbers?.ForEach(this.AddLicensePlateNumber);
+            this.Name = name;
+            this.Email = email;
+            this.DriversLicenseNumber = driversLicenseNumber;
+            this.LicensePlateNumbers = licensePlateNumbers;
         }
 
         public abstract string FileToString();

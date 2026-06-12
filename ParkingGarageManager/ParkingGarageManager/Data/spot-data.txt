@@ -1,8 +1,8 @@
-A01,O,null 
+A01,O,null
 A02,R,1
 A03,O,null
 B01,O,null
-B02,T,ABC123
+B02,O,null
 B03,T,DEF456
 C01,O,null
 C02,R,2
