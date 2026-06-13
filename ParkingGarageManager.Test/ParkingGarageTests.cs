@@ -11,6 +11,9 @@ public class ParkingGarageTests
     private Core CreateCore()
     {
         var core = new Core(skipLoad: true);
+        core.ParkingGarage.Spots["A01"] = new OpenSpot("A01");
+        core.ParkingGarage.Spots["A02"] = new OpenSpot("A02");
+        core.ParkingGarage.Spots["A03"] = new OpenSpot("A03");
         return core;
     }
 
@@ -23,7 +26,7 @@ public class ParkingGarageTests
         core.ParkingGarage.Spots["A01"] = new OpenSpot("A01");
         core.Vehicles["NY-0222"] = new Vehicle("NY-0222");
 
-        core.CheckInSpot("A01", "NY-0222");
+        core.CheckInManager.CheckInSpot("A01", "NY-0222");
 
         Assert.IsType<TakenSpot>(core.ParkingGarage.Spots["A01"]);
     }
@@ -35,10 +38,10 @@ public class ParkingGarageTests
         var vehicle = new Vehicle("NY-0222");
         core.Vehicles["NY-0222"] = vehicle;
         core.ParkingGarage.Spots["A01"] = new TakenSpot("A01", vehicle);
-        core.CreateVisit("NY-0222");
+        core.CheckInManager.CreateVisit("NY-0222", "A01");
 
-        var (_, _, spotID, subscriber) = core.CheckOutSpot("NY-0222");
-        core.RestoreSpot(spotID, subscriber as ActiveSubscriber);
+        var (_, _, spotID, subscriber) = core.CheckOutManager.CheckOutSpot("NY-0222");
+        core.SpotManager.RestoreSpot(spotID, subscriber as ActiveSubscriber);
 
         Assert.IsType<OpenSpot>(core.ParkingGarage.Spots["A01"]);
     }
@@ -51,7 +54,7 @@ public class ParkingGarageTests
         core.Vehicles["NY-0222"] = vehicle;
         core.ParkingGarage.Spots["A01"] = new TakenSpot("A01", vehicle);
 
-        Assert.Throws<InvalidOperationException>(() => core.CheckInSpot("A01", "NY-0222"));
+        Assert.Throws<InvalidOperationException>(() => core.CheckInManager.CheckInSpot("A01", "NY-0222"));
     }
 
     [Fact]
@@ -60,7 +63,7 @@ public class ParkingGarageTests
         var core = CreateCore();
         core.Vehicles["NY-0222"] = new Vehicle("NY-0222");
 
-        Assert.Throws<KeyNotFoundException>(() => core.CheckInSpot("Z01", "NY-0222"));
+        Assert.Throws<KeyNotFoundException>(() => core.CheckInManager.CheckInSpot("Z01", "NY-0222"));
     }
 
     [Fact]
@@ -69,7 +72,7 @@ public class ParkingGarageTests
         var core = CreateCore();
         core.Vehicles["NY-0222"] = new Vehicle("NY-0222");
 
-        Assert.Throws<KeyNotFoundException>(() => core.CheckOutSpot("NY-0222"));
+        Assert.Throws<KeyNotFoundException>(() => core.CheckOutManager.CheckOutSpot("NY-0222"));
     }
 
     // Subscriber Tests
@@ -80,7 +83,7 @@ public class ParkingGarageTests
         var core = CreateCore();
         core.ParkingGarage.Spots["A01"] = new OpenSpot("A01");
 
-        core.AddSubscriber(
+        core.SubscriberManager.AddSubscriber(
             DateOnly.FromDateTime(DateTime.Now),
             "TEST123",
             "John Doe",
@@ -100,7 +103,7 @@ public class ParkingGarageTests
         core.ParkingGarage.Spots["A01"] = new OpenSpot("A01");
         core.ParkingGarage.Spots["A02"] = new OpenSpot("A02");
 
-        core.AddSubscriber(
+        core.SubscriberManager.AddSubscriber(
             DateOnly.FromDateTime(DateTime.Now),
             "TEST123",
             "John Smith",
@@ -110,7 +113,7 @@ public class ParkingGarageTests
         );
 
         Assert.Throws<InvalidOperationException>(() =>
-            core.AddSubscriber(
+            core.SubscriberManager.AddSubscriber(
                 DateOnly.FromDateTime(DateTime.Now),
                 "TEST123",
                 "Jane Doe",
@@ -129,7 +132,7 @@ public class ParkingGarageTests
         core.ParkingGarage.Spots["A01"] = new OpenSpot("A01");
         core.ParkingGarage.Spots["A02"] = new OpenSpot("A02");
 
-        core.AddSubscriber(
+        core.SubscriberManager.AddSubscriber(
             DateOnly.FromDateTime(DateTime.Now),
             "TEST123",
             "John Doe",
@@ -139,7 +142,7 @@ public class ParkingGarageTests
         );
 
         Assert.Throws<InvalidOperationException>(() =>
-            core.AddSubscriber(
+            core.SubscriberManager.AddSubscriber(
                 DateOnly.FromDateTime(DateTime.Now),
                 "123TEST",
                 "Jane Doe",
@@ -156,7 +159,7 @@ public class ParkingGarageTests
         var core = CreateCore();
         core.ParkingGarage.Spots["A01"] = new OpenSpot("A01");
 
-        core.AddSubscriber(
+        core.SubscriberManager.AddSubscriber(
             DateOnly.FromDateTime(DateTime.Now),
             "TEST123",
             "John Doe",
@@ -175,7 +178,7 @@ public class ParkingGarageTests
     {
         string visitID = "1";
         DateTime entryTime = DateTime.Now.AddHours(-1);
-        var visit = new Visit(visitID, entryTime, Core.HourlyRate);
+        var visit = new Visit(visitID, "A01",entryTime, Core.HourlyRate);
 
         PendingPayment? payment = visit.EndVisit("1", isSubscriber: false);
 
@@ -188,7 +191,7 @@ public class ParkingGarageTests
     {
         string visitID = "1";
         DateTime entryTime = DateTime.Now.AddMinutes(-90);
-        var visit = new Visit(visitID, entryTime, Core.HourlyRate);
+        var visit = new Visit(visitID, "A01", entryTime, Core.HourlyRate);
 
         PendingPayment? payment = visit.EndVisit("1", isSubscriber: false);
 
@@ -201,7 +204,7 @@ public class ParkingGarageTests
     {
         string visitID = "1";
         DateTime entryTime = DateTime.Now.AddHours(-2);
-        var visit = new Visit(visitID, entryTime, Core.HourlyRate);
+        var visit = new Visit(visitID, "A01", entryTime, Core.HourlyRate);
 
         PendingPayment? payment = visit.EndVisit("1", isSubscriber: true);
 

@@ -28,7 +28,7 @@ namespace ParkingGarageManager.ConsoleUIManager
                 {
                     Vehicle vehicle = this.ConsoleUI.Core.VehicleManager.FindVehicle(licensePlateNumber);
                     Spot? spot = this.ConsoleUI.Core.VehicleManager.FindSpotByVehicle(vehicle);
-                    Subscriber? subscriber = this.ConsoleUI.Core.SubscriberManager.FindSubscriber(licensePlateNumber);
+                    Subscriber? subscriber = this.ConsoleUI.Core.SubscriberManager.FindSubscriber(licensePlateNumber: licensePlateNumber);
 
                     this.DisplayVehicleStatus(vehicle, spot, subscriber);
                 }

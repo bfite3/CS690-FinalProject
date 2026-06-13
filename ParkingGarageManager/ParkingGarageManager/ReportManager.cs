@@ -65,28 +65,18 @@ namespace ParkingGarageManager
                 Vehicle? vehicle = this.Core.Vehicles.Values.FirstOrDefault(v => v.Visits.ContainsKey(visit.ID));
 
                 if (vehicle == null)
-                    discrepancies.Add((visit.ID, $"No vehicle found for Visit ID {visit.ID}"));
-
-                if (visit.LeaveTime != null && visit.Payment is PendingPayment pendingPayment)
-                    discrepancies.Add((visit.ID, $"Completed visit ID has a pending payment of {pendingPayment.AmountOwed - pendingPayment.AmountPaid:C} for License Plate Number {vehicle?.LicensePlateNumber ?? "Unknown"}"));
-            }
-
-            foreach (Visit visit in todaysVisits)
-            {
-                Vehicle? vehicle = this.Core.Vehicles.Values.FirstOrDefault(v => v.Visits.ContainsKey(visit.ID));
-
-                if (vehicle == null)
                 {
                     discrepancies.Add((visit.ID, $"No vehicle found for Visit ID {visit.ID}"));
                     continue;
                 }
+                    
+                if (visit.LeaveTime != null && visit.Payment is PendingPayment pendingPayment)
+                    discrepancies.Add((visit.ID, $"Completed visit ID has a pending payment of {pendingPayment.AmountOwed - pendingPayment.AmountPaid:C} for License Plate Number {vehicle?.LicensePlateNumber ?? "Unknown"}"));
 
                 if (this.Core.Subscribers.Values
-                    .FirstOrDefault(s => s is ActiveSubscriber active && active.SpotIDs.Contains(visit.SpotID)) is not ActiveSubscriber activeSubscriber)
-                    continue;
-
-                if (!activeSubscriber.LicensePlateNumbers.Contains(vehicle.LicensePlateNumber))
-                    discrepancies.Add((visit.ID, $"Visit ID {visit.ID} was for a Reserved spot and given to a customer who was not subscribed to that spot."));
+                    .FirstOrDefault(s => s is ActiveSubscriber active && active.SpotIDs.Contains(visit.SpotID)) is ActiveSubscriber activeSubscriber
+                    && !activeSubscriber.LicensePlateNumbers.Contains(vehicle!.LicensePlateNumber))
+                    discrepancies.Add((visit.ID, $"Visit {visit.ID} used reserved spot {visit.SpotID} but {vehicle.LicensePlateNumber} is not subscribed to that spot."));
             }
 
             Console.WriteLine(divider);
