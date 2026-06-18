@@ -56,7 +56,11 @@ namespace ParkingGarageManager
         {
             string maxVisitID = this.Core.Vehicles.Values
                 .SelectMany(vehicle => vehicle.Visits.Values)
-                .Max(visit => visit.ID) ?? "0";
+                .Where(visit => visit.ID != null)
+                .Select(visit => int.Parse(visit.ID))
+                .DefaultIfEmpty(0)
+                .Max()
+                .ToString();
 
             string visitID = (int.Parse(maxVisitID) + 1).ToString();
             DateTime entryTime = DateTime.Now;

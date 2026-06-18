@@ -39,7 +39,12 @@ namespace ParkingGarageManager
             string maxPaymentID = this.Core.Vehicles.Values
                 .SelectMany(vehicle => vehicle.Visits.Values)
                 .Select(visit => visit.Payment)
-                .Max(payment => payment?.ID) ?? "0";
+                .Where(payment => payment != null)
+                .Select(payment => int.Parse(payment!.ID))
+                .DefaultIfEmpty(0)
+                .Max()
+                .ToString();
+
             int paymentIDCounter = int.Parse(maxPaymentID) + 1;
 
             List<Visit> pendingVisits = vehicle.Visits.Values
